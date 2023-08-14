@@ -1,4 +1,4 @@
-SRCS = main.c 
+SRCS = *.c
 NAME = fftVisualizer
 CC = clang
 CFLAGS = -Wall -Wextra -g -lm
@@ -12,7 +12,7 @@ all: ${NAME}
 
 $(NAME):runraylib $(OBJS)
 		${CC} ${CFLAGS} -o  ${NAME} ${OBJS} ${INCS}
-		$(RUN)
+		# $(RUN)
 
 ignore:
 	${CC} ${CFLAGS} -o ${NAME} ${OBJS} ${INCS}
