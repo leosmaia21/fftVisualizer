@@ -1,7 +1,7 @@
 SRCS = *.c
 NAME = fftVisualizer
 CC = clang
-CFLAGS = -Wall -Wextra -g -lm
+CFLAGS = -Wall -Wextra -g -lm -O3
 
 RM = rm -f
 OBJS = $(SRCS:.c=.o)
