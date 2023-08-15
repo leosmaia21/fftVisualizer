@@ -44,6 +44,7 @@ int main(void)
 
 
     music = LoadMusicStream("Sultans of Swing.mp3");
+    // music = LoadMusicStream("0.01.wav");
     // Music music = LoadMusicStream("raylib/examples/audio/resources/weird.wav");
     // Sound sound = LoadSound("resources/coin.wav");
 	
@@ -58,6 +59,7 @@ int main(void)
     {
 		// Update
 		//----------------------------------------------------------------------------------
+		// if (GetMusicTimePlayed(music) < 1) {
 		UpdateMusicStream(music);   // Update music buffer with new stream data
 
 		//----------------------------------------------------------------------------------
@@ -65,7 +67,7 @@ int main(void)
 
 		ClearBackground((Color){0x18, 0x18, 0x18, 0xFF});
 		if (numberofframes != 0) {
-			printf("frames:%d\n", numberofframes);
+			// printf("frames:%d\n", numberofframes);
 			int retSize = GetScreenWidth() / numberofframes;	
 			float y, x = 0;
 			for (size_t i = 0; i < numberofframes; i++) {
@@ -76,18 +78,12 @@ int main(void)
 				if (value < 0)
 					y += GetScreenHeight() / 2.0f / 2.0f - y;
 				DrawRectangle(x, y, retSize, fabsf(value) * GetScreenHeight() / 2.0f / 2, RED);
-				// }
-				// else {
-				// 	y = map(-value, 0, 1, 0, GetScreenHeight() / 2.0f);
-				// 	// printf("%f %f \n",value, y);
-				// 	x = retSize * i;
-				// 	DrawRectangle(x, GetScreenHeight() / 2, retSize, y, RED);
-				// }
 			}
 			numberofframes = 0;
 		}
 
 		EndDrawing();
+		// }
 		//----------------------------------------------------------------------------------
     }
 
