@@ -1,3 +1,4 @@
+#include <complex.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -6,31 +7,49 @@
 #include <math.h>
 #include <string.h>
 
+typedef struct  {
+	float real;
+	float imag;
+	float phase;
+	float magnitude;
+} t_complex;
+
 Music music;
-float data[4096];
+float data[900];
+t_complex dataDFT[900];
+
 _Atomic int numberofframes = 0;
 
-int x = 0;
 void ProcessAudio(void *buffer, unsigned int frames)
 {
     float *samples = (float *)buffer;   // Samples internally stored as <float>s
 
-	memcpy(data, buffer, frames * 2 * 4);
+	for (int i = 0; i < frames; i++) {
+		data[i] = samples[i * 2];
+	}
+	// memcpy(data, buffer, frames * 2 * 4);
 	numberofframes = frames;
-	// memset(data, 0, 4 * 512);
- //    for (unsigned int frame = 0; frame < frames; frame++)
-	// {
-	// 	float *left = &samples[frame * 2 + 0], *right = &samples[frame * 2 + 1];
-	// 	data[frame] = *left;
-	// }
 }
 
-float map(float x, float smin, float smax, float dmin, float dmax) {
+static inline float map(float x, float smin, float smax, float dmin, float dmax) {
 	return ((x - smin) * (dmax - dmin) / (smax - smin)) + dmin;
 }
-//------------------------------------------------------------------------------------
-// Program main entry point
-//------------------------------------------------------------------------------------
+
+void dft(float* x_real, int N, t_complex ret[]) {
+	for (int k = 0; k < N; k++) {
+		ret[k].real = 0.0f;
+		ret[k].imag = 0.0f;
+		for (int n = 0; n < N; n++) {
+			float angle = 2 * PI * k * n / N;
+			ret[k].real += x_real[n] * cos(angle) / sqrt(N);
+			ret[k].imag -= x_real[n] * sin(angle) / sqrt(N);
+		}
+		ret[k].magnitude = sqrt(ret[k].magnitude * ret[k].magnitude + ret[k].phase * ret[k].phase);
+		ret[k].phase = atan2(ret[k].phase, ret[k].magnitude);
+	}
+}
+
+
 int main(void)
 {
     // Initialization
@@ -41,7 +60,6 @@ int main(void)
     InitWindow(screenWidth, screenHeight, "Susana");
 
     InitAudioDevice();              // Initialize audio device
-
 
     music = LoadMusicStream("Sultans of Swing.mp3");
     // music = LoadMusicStream("0.01.wav");
@@ -55,6 +73,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     // Main game loop
+	t_complex dataDFT[900];
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
 		// Update
@@ -68,33 +87,41 @@ int main(void)
 		ClearBackground((Color){0x18, 0x18, 0x18, 0xFF});
 		if (numberofframes != 0) {
 			// printf("frames:%d\n", numberofframes);
+			dft(data, numberofframes, dataDFT);
+			float deltaFs = (float)music.stream.sampleRate / numberofframes;
 			int retSize = GetScreenWidth() / numberofframes;	
 			float y, x = 0;
-			for (size_t i = 0; i < numberofframes; i++) {
-				float value = data[2 * i];
-				// if (value >= 0) {
+			for (int i = 0; i < numberofframes; i++) {
+				float value = data[i];
 				y = map(fabsf(value), -1, 1, GetScreenHeight() / 2.0f, 0);
 				x += retSize;
 				if (value < 0)
 					y += GetScreenHeight() / 2.0f / 2.0f - y;
 				DrawRectangle(x, y, retSize, fabsf(value) * GetScreenHeight() / 2.0f / 2, RED);
+
+				value = dataDFT[i].magnitude;
+				printf("magnitude:%f\n", value);
+				// y = map(fabsf(value), -1, 1, GetScreenHeight() / 2.0f, 0);
+				// x += retSize;
+				// // if (value < 0)
+				// // 	y += GetScreenHeight() / 2.0f / 2.0f - y;
+				// DrawRectangle(x, y, retSize, fabsf(value) * GetScreenHeight() / 2.0f , RED);
+
+
 			}
+			printf("frames:%d\n", numberofframes);
 			numberofframes = 0;
+
 		}
 
 		EndDrawing();
-		// }
-		//----------------------------------------------------------------------------------
-    }
+	}
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
     UnloadMusicStream(music);   // Unload music stream buffers from RAM
-
     DetachAudioMixedProcessor(ProcessAudio);  // Disconnect audio processor
-
     CloseAudioDevice();         // Close audio device (music streaming is automatically stopped)
-
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
